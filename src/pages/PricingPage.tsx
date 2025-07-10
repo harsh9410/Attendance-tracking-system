@@ -1,9 +1,23 @@
-import React from 'react';
-import { Check, X, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Check, X, Star, ArrowRight, Mail, Phone } from 'lucide-react';
 
 const PricingPage = () => {
+  const navigate = useNavigate();
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    company: '',
+    plan: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const plans = [
     {
+      id: 'basic',
       name: 'Basic',
       price: 'Free',
       period: 'Forever',
@@ -26,6 +40,7 @@ const PricingPage = () => {
       popular: false
     },
     {
+      id: 'pro',
       name: 'Pro',
       price: '₹667',
       period: 'per user/month',
@@ -49,6 +64,7 @@ const PricingPage = () => {
       popular: true
     },
     {
+      id: 'enterprise',
       name: 'Enterprise',
       price: 'Custom',
       period: 'Contact us',
@@ -114,6 +130,55 @@ const PricingPage = () => {
     }
   };
 
+  const handlePlanSelect = (planId: string) => {
+    setSelectedPlan(planId);
+    
+    if (planId === 'basic') {
+      // Navigate to signup or start free trial
+      navigate('/contact', { state: { plan: 'Basic' } });
+    } else if (planId === 'pro') {
+      // Show contact modal for Pro plan
+      setContactForm(prev => ({ ...prev, plan: 'Pro' }));
+      setShowContactModal(true);
+    } else if (planId === 'enterprise') {
+      // Show contact modal for Enterprise plan
+      setContactForm(prev => ({ ...prev, plan: 'Enterprise' }));
+      setShowContactModal(true);
+    }
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Handle form submission
+    console.log('Contact form submitted:', contactForm);
+    
+    // Show success message
+    alert('Thank you for your interest! We\'ll contact you within 24 hours.');
+    
+    // Reset form and close modal
+    setContactForm({
+      name: '',
+      email: '',
+      company: '',
+      plan: '',
+      message: ''
+    });
+    setShowContactModal(false);
+    setIsSubmitting(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setContactForm({
+      ...contactForm,
+      [e.target.name]: e.target.value
+    });
+  };
+
   return (
     <div className="pt-16">
       {/* Hero Section */}
@@ -133,7 +198,13 @@ const PricingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {plans.map((plan, index) => (
-              <div key={index} className={`relative rounded-2xl shadow-lg ${plan.popular ? 'ring-2 ring-blue-600 scale-105' : ''}`}>
+              <div 
+                key={index} 
+                className={`relative rounded-2xl shadow-lg transition-all duration-300 cursor-pointer hover:shadow-xl ${
+                  plan.popular ? 'ring-2 ring-blue-600 scale-105' : ''
+                } ${selectedPlan === plan.id ? 'ring-2 ring-green-500' : ''}`}
+                onClick={() => handlePlanSelect(plan.id)}
+              >
                 {plan.popular && (
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                     <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center space-x-1">
@@ -265,15 +336,116 @@ const PricingPage = () => {
             Join thousands of companies using GeoTrack to streamline their attendance management.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-medium hover:bg-gray-100 transition-colors duration-200">
-              Start Free Trial
-            </button>
-            <button className="bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-blue-800 transition-colors duration-200">
+            <Link
+              to="/contact"
+              className="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-medium hover:bg-gray-100 transition-colors duration-200 inline-flex items-center space-x-2"
+            >
+              <span>Start Free Trial</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <button 
+              onClick={() => setShowContactModal(true)}
+              className="bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-blue-800 transition-colors duration-200"
+            >
               Contact Sales
             </button>
           </div>
         </div>
       </section>
+
+      {/* Contact Modal */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Contact Sales</h3>
+              <button 
+                onClick={() => setShowContactModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleContactSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={contactForm.name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={contactForm.email}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                <input
+                  type="text"
+                  name="company"
+                  value={contactForm.company}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Plan</label>
+                <input
+                  type="text"
+                  name="plan"
+                  value={contactForm.plan}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea
+                  name="message"
+                  value={contactForm.message}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Tell us about your requirements..."
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowContactModal(false)}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
